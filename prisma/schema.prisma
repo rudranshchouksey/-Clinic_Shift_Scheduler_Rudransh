@@ -1,0 +1,76 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  MANAGER
+  STAFF
+}
+
+enum Profession {
+  DOCTOR
+  NURSE
+  RECEPTIONIST
+}
+
+model User {
+  id         String      @id @default(cuid())
+  email      String      @unique
+  password   String
+  name       String
+  role       Role        @default(STAFF)
+  profession Profession?
+
+  claims     ShiftClaim[]
+  
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+}
+
+model Shift {
+  id                   String       @id @default(cuid())
+  date                 DateTime     @db.Date
+  startTime            DateTime     @db.Time
+  endTime              DateTime     @db.Time
+  
+  requiredDoctors      Int          @default(0)
+  requiredNurses       Int          @default(0)
+  requiredReceptionists Int          @default(0)
+
+  claims               ShiftClaim[]
+
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+
+  @@index([date])
+}
+
+model ShiftClaim {
+  id        String   @id @default(cuid())
+  shiftId   String
+  userId    String
+  
+  shift     Shift    @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+
+  @@unique([shiftId, userId])
+}
+
+model ImportLog {
+  id             String   @id @default(cuid())
+  fileName       String
+  importedBy     String
+  totalRows      Int
+  acceptedRows   Int
+  rejectedRows   Int
+  mergedRows     Int
+  details        String   @db.Text
+  createdAt      DateTime @default(now())
+}

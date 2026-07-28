@@ -1,0 +1,9 @@
+Name,Email,Role,Profession
+Manager Mike,mike@clinic.com,Manager,
+Dr. Alice,alice@clinic.com,Staff,Doctor
+  Dr. Alice ,alice@clinic.com,staff,doctor
+Nurse Bob, bob@clinic.com, Staff, Nurse
+Nurse Bob Duplicate,bob@clinic.com,Staff,NURSE
+Recp Charlie,charlie@clinic.com,Staff, receptionist
+Recp Charlie 2,charlie2@clinic.com,Staff, Receptionist
+Dr. Bad Data,,Staff,Doctor
