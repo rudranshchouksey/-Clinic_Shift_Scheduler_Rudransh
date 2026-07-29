@@ -19,58 +19,103 @@ enum Profession {
 }
 
 model User {
-  id         String      @id @default(cuid())
-  email      String      @unique
-  password   String
-  name       String
-  role       Role        @default(STAFF)
-  profession Profession?
-
-  claims     ShiftClaim[]
+  id            String       @id @default(cuid())
+  email         String       @unique
+  password      String
+  name          String
+  role          Role         @default(STAFF)
+  profession    Profession?
   
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
+  claims        ShiftClaim[]
+  importHistory ImportHistory[] @relation("ImportUser")
+  
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  deletedAt     DateTime?
+
+  @@index([email])
+  @@index([role])
 }
 
 model Shift {
-  id                   String       @id @default(cuid())
-  date                 DateTime     @db.Date
-  startTime            DateTime     @db.Time
-  endTime              DateTime     @db.Time
+  id           String             @id @default(cuid())
+  date         DateTime           @db.Date
+  startTime    DateTime           @db.Time
+  endTime      DateTime           @db.Time
   
-  requiredDoctors      Int          @default(0)
-  requiredNurses       Int          @default(0)
-  requiredReceptionists Int          @default(0)
+  requirements ShiftRequirement[]
+  claims       ShiftClaim[]
 
-  claims               ShiftClaim[]
-
-  createdAt            DateTime     @default(now())
-  updatedAt            DateTime     @updatedAt
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  deletedAt    DateTime?
 
   @@index([date])
+  @@index([deletedAt]) // Index for faster filtering of non-deleted shifts
+}
+
+model ShiftRequirement {
+  id         String     @id @default(cuid())
+  shiftId    String
+  profession Profession
+  count      Int        @default(1)
+  
+  shift      Shift      @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  deletedAt  DateTime?
+
+  @@unique([shiftId, profession]) // Each shift can only have one requirement definition per profession
+  @@index([shiftId])
 }
 
 model ShiftClaim {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   shiftId   String
   userId    String
   
-  shift     Shift    @relation(fields: [shiftId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shift     Shift     @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
+  // Assuming a user can only claim a given shift once
   @@unique([shiftId, userId])
+  @@index([shiftId])
+  @@index([userId])
 }
 
-model ImportLog {
-  id             String   @id @default(cuid())
-  fileName       String
-  importedBy     String
-  totalRows      Int
-  acceptedRows   Int
-  rejectedRows   Int
-  mergedRows     Int
-  details        String   @db.Text
-  createdAt      DateTime @default(now())
+model ImportHistory {
+  id          String         @id @default(cuid())
+  fileName    String
+  importedById String
+  
+  importedBy  User           @relation("ImportUser", fields: [importedById], references: [id], onDelete: Cascade)
+  reports     ImportReport[]
+  
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([importedById])
+  @@index([createdAt])
+}
+
+model ImportReport {
+  id              String        @id @default(cuid())
+  importHistoryId String
+  
+  totalRows       Int           @default(0)
+  acceptedRows    Int           @default(0)
+  rejectedRows    Int           @default(0)
+  details         String        @db.Text
+  
+  importHistory   ImportHistory @relation(fields: [importHistoryId], references: [id], onDelete: Cascade)
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([importHistoryId])
 }
