@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { format } from 'date-fns'
 import {
   Table,
@@ -10,10 +11,13 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
-import { Edit2, Trash2 } from 'lucide-react'
+import { Edit2, Trash2, UserPlus, CheckCircle2, Loader2 } from 'lucide-react'
 import { ShiftDialog } from './ShiftDialog'
 import { DeleteShiftDialog } from './DeleteShiftDialog'
+import { AssignStaffDialog } from './AssignStaffDialog'
 import { Profession } from '@prisma/client'
+import { claimShift } from '../claim-actions'
+import { toast } from 'sonner'
 
 type ShiftWithRelations = {
   id: string
@@ -24,14 +28,50 @@ type ShiftWithRelations = {
     profession: Profession
     count: number
   }[]
-  claims: unknown[]
+  claims: {
+    userId: string
+    user: {
+      id: string
+      name: string
+      profession: Profession | null
+    }
+  }[]
 }
 
 interface ShiftListProps {
   shifts: ShiftWithRelations[]
+  userRole: 'MANAGER' | 'STAFF'
+  userId: string
+  userProfession?: Profession | null
+  staffUsers?: { id: string; name: string; profession: Profession | null }[]
 }
 
-export function ShiftList({ shifts }: ShiftListProps) {
+export function ShiftList({
+  shifts,
+  userRole,
+  userId,
+  userProfession,
+  staffUsers = [],
+}: ShiftListProps) {
+  const [claimingShiftId, setClaimingShiftId] = useState<string | null>(null)
+
+  const handleClaim = async (shiftId: string) => {
+    setClaimingShiftId(shiftId)
+    try {
+      const result = await claimShift(shiftId)
+      if (result.success) {
+        toast.success('Shift claimed successfully')
+      } else {
+        toast.error(result.error || 'Failed to claim shift')
+      }
+    } catch (e) {
+      console.error(e)
+      toast.error('An unexpected error occurred')
+    } finally {
+      setClaimingShiftId(null)
+    }
+  }
+
   if (shifts.length === 0) {
     return (
       <div className="text-center py-12 text-muted-foreground border rounded-lg border-dashed">
@@ -59,6 +99,20 @@ export function ShiftList({ shifts }: ShiftListProps) {
             const receptionists =
               shift.requirements.find((r) => r.profession === 'RECEPTIONIST')?.count || 0
 
+            const totalRequired = doctors + nurses + receptionists
+
+            const hasClaimed = shift.claims.some((c) => c.userId === userId)
+
+            let canClaim = false
+            if (userRole === 'STAFF' && userProfession) {
+              const reqCountForUser =
+                shift.requirements.find((r) => r.profession === userProfession)?.count || 0
+              const currentCountForUser = shift.claims.filter(
+                (c) => c.user.profession === userProfession,
+              ).length
+              canClaim = reqCountForUser > 0 && currentCountForUser < reqCountForUser && !hasClaimed
+            }
+
             return (
               <TableRow key={shift.id}>
                 <TableCell className="font-medium">
@@ -76,37 +130,69 @@ export function ShiftList({ shifts }: ShiftListProps) {
                   </div>
                 </TableCell>
                 <TableCell>
-                  {shift.claims.length} / {doctors + nurses + receptionists}
+                  {shift.claims.length} / {totalRequired}
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
-                    <ShiftDialog
-                      shift={{
-                        id: shift.id,
-                        date: format(new Date(shift.date), 'yyyy-MM-dd'),
-                        startTime: format(new Date(shift.startTime), 'HH:mm'),
-                        endTime: format(new Date(shift.endTime), 'HH:mm'),
-                        doctorCount: doctors,
-                        nurseCount: nurses,
-                        receptionistCount: receptionists,
-                      }}
-                    >
-                      <Button variant="ghost" size="icon">
-                        <Edit2 className="h-4 w-4" />
-                        <span className="sr-only">Edit</span>
-                      </Button>
-                    </ShiftDialog>
+                    {userRole === 'MANAGER' ? (
+                      <>
+                        <AssignStaffDialog shiftId={shift.id} staffUsers={staffUsers}>
+                          <Button variant="outline" size="sm">
+                            <UserPlus className="mr-2 h-4 w-4" />
+                            Assign
+                          </Button>
+                        </AssignStaffDialog>
+                        <ShiftDialog
+                          shift={{
+                            id: shift.id,
+                            date: format(new Date(shift.date), 'yyyy-MM-dd'),
+                            startTime: format(new Date(shift.startTime), 'HH:mm'),
+                            endTime: format(new Date(shift.endTime), 'HH:mm'),
+                            doctorCount: doctors,
+                            nurseCount: nurses,
+                            receptionistCount: receptionists,
+                          }}
+                        >
+                          <Button variant="ghost" size="icon">
+                            <Edit2 className="h-4 w-4" />
+                            <span className="sr-only">Edit</span>
+                          </Button>
+                        </ShiftDialog>
 
-                    <DeleteShiftDialog shiftId={shift.id}>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        <span className="sr-only">Delete</span>
+                        <DeleteShiftDialog shiftId={shift.id}>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            <span className="sr-only">Delete</span>
+                          </Button>
+                        </DeleteShiftDialog>
+                      </>
+                    ) : // Staff View Actions
+                    hasClaimed ? (
+                      <Button variant="secondary" size="sm" disabled>
+                        <CheckCircle2 className="mr-2 h-4 w-4 text-primary" />
+                        Claimed
                       </Button>
-                    </DeleteShiftDialog>
+                    ) : canClaim ? (
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={() => handleClaim(shift.id)}
+                        disabled={claimingShiftId === shift.id}
+                      >
+                        {claimingShiftId === shift.id ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : null}
+                        Claim Shift
+                      </Button>
+                    ) : (
+                      <Button variant="outline" size="sm" disabled>
+                        Unavailable
+                      </Button>
+                    )}
                   </div>
                 </TableCell>
               </TableRow>

@@ -10,14 +10,7 @@ import { authClient } from '@/lib/auth-client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  CardFooter,
-} from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Loader2 } from 'lucide-react'
 
 const formSchema = z.object({
@@ -47,7 +40,7 @@ export function LoginForm() {
     setError(null)
 
     try {
-      const { data, error: signInError } = await authClient.signIn.email({
+      const { error: signInError } = await authClient.signIn.email({
         email: values.email,
         password: values.password,
       })
@@ -60,7 +53,7 @@ export function LoginForm() {
 
       router.push('/dashboard')
       router.refresh()
-    } catch (err) {
+    } catch {
       setError('An unexpected error occurred.')
       setIsLoading(false)
     }

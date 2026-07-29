@@ -23,3 +23,23 @@ export async function getShifts() {
     orderBy: [{ date: 'asc' }, { startTime: 'asc' }],
   })
 }
+
+export async function getStaffUsers() {
+  await requireAuth() // Managers can fetch staff
+
+  return prisma.user.findMany({
+    where: {
+      role: 'STAFF',
+      deletedAt: null,
+    },
+    select: {
+      id: true,
+      name: true,
+      profession: true,
+      email: true,
+    },
+    orderBy: {
+      name: 'asc',
+    },
+  })
+}
