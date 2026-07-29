@@ -1,3 +1,14 @@
+# Clinic Shift Scheduler
+
+## Test Credentials
+
+| Role         | Email                    | Password        |
+| :----------- | :----------------------- | :-------------- |
+| Manager      | manager@clinic.com       | manager123      |
+| Doctor       | doctor1@clinic.com       | doctor123       |
+| Nurse        | nurse1@clinic.com        | nurse123        |
+| Receptionist | receptionist1@clinic.com | receptionist123 |
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started

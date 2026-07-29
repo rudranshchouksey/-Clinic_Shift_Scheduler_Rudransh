@@ -19,22 +19,57 @@ enum Profession {
 }
 
 model User {
-  id            String       @id @default(cuid())
-  email         String       @unique
-  password      String
+  id            String          @id @default(cuid())
+  email         String          @unique
+  password      String?
   name          String
-  role          Role         @default(STAFF)
+  role          Role            @default(STAFF)
   profession    Profession?
+  emailVerified Boolean         @default(false)
+  image         String?
   
   claims        ShiftClaim[]
   importHistory ImportHistory[] @relation("ImportUser")
+  sessions      Session[]
+  accounts      Account[]
   
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
   deletedAt     DateTime?
 
   @@index([email])
   @@index([role])
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime
+  updatedAt DateTime
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime
+  updatedAt             DateTime
 }
 
 model Shift {

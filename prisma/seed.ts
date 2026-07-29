@@ -4,56 +4,67 @@ import * as bcrypt from 'bcryptjs'
 const prisma = new PrismaClient()
 
 async function main() {
-  const hashedPassword = await bcrypt.hash('password123', 10)
+  const managerPassword = await bcrypt.hash('manager123', 10)
+  const doctorPassword = await bcrypt.hash('doctor123', 10)
+  const nursePassword = await bcrypt.hash('nurse123', 10)
+  const receptionistPassword = await bcrypt.hash('receptionist123', 10)
 
-  // Upsert Manager
+  // 1 Manager
   await prisma.user.upsert({
     where: { email: 'manager@clinic.com' },
     update: {},
     create: {
       email: 'manager@clinic.com',
       name: 'Admin Manager',
-      password: hashedPassword,
+      password: managerPassword,
       role: 'MANAGER',
     },
   })
 
-  // Upsert a few staff
-  await prisma.user.upsert({
-    where: { email: 'doctor@clinic.com' },
-    update: {},
-    create: {
-      email: 'doctor@clinic.com',
-      name: 'Dr. Smith',
-      password: hashedPassword,
-      role: 'STAFF',
-      profession: 'DOCTOR',
-    },
-  })
+  // Multiple Doctors
+  for (let i = 1; i <= 2; i++) {
+    await prisma.user.upsert({
+      where: { email: `doctor${i}@clinic.com` },
+      update: {},
+      create: {
+        email: `doctor${i}@clinic.com`,
+        name: `Dr. Smith ${i}`,
+        password: doctorPassword,
+        role: 'STAFF',
+        profession: 'DOCTOR',
+      },
+    })
+  }
 
-  await prisma.user.upsert({
-    where: { email: 'nurse@clinic.com' },
-    update: {},
-    create: {
-      email: 'nurse@clinic.com',
-      name: 'Nurse Joy',
-      password: hashedPassword,
-      role: 'STAFF',
-      profession: 'NURSE',
-    },
-  })
+  // Multiple Nurses
+  for (let i = 1; i <= 2; i++) {
+    await prisma.user.upsert({
+      where: { email: `nurse${i}@clinic.com` },
+      update: {},
+      create: {
+        email: `nurse${i}@clinic.com`,
+        name: `Nurse Joy ${i}`,
+        password: nursePassword,
+        role: 'STAFF',
+        profession: 'NURSE',
+      },
+    })
+  }
 
-  await prisma.user.upsert({
-    where: { email: 'receptionist@clinic.com' },
-    update: {},
-    create: {
-      email: 'receptionist@clinic.com',
-      name: 'Rec. Anna',
-      password: hashedPassword,
-      role: 'STAFF',
-      profession: 'RECEPTIONIST',
-    },
-  })
+  // Multiple Receptionists
+  for (let i = 1; i <= 2; i++) {
+    await prisma.user.upsert({
+      where: { email: `receptionist${i}@clinic.com` },
+      update: {},
+      create: {
+        email: `receptionist${i}@clinic.com`,
+        name: `Rec. Anna ${i}`,
+        password: receptionistPassword,
+        role: 'STAFF',
+        profession: 'RECEPTIONIST',
+      },
+    })
+  }
 
   console.log('Database seeded successfully')
 }

@@ -1,12 +1,23 @@
 import { betterAuth } from 'better-auth'
+import { prismaAdapter } from 'better-auth/adapters/prisma'
+import { prisma } from '@/lib/db'
 
 export const auth = betterAuth({
-  database: {
-    // Basic setup, configure as needed based on Prisma
+  database: prismaAdapter(prisma, {
     provider: 'postgresql',
-    url: process.env.DATABASE_URL as string,
-  },
+  }),
   emailAndPassword: {
     enabled: true,
+  },
+  user: {
+    additionalFields: {
+      role: {
+        type: 'string',
+      },
+      profession: {
+        type: 'string',
+        required: false,
+      },
+    },
   },
 })
