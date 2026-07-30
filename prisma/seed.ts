@@ -27,6 +27,7 @@ async function createOrUpdateUser(
       email,
       password: passwordPlain,
       name,
+      role,
     },
     headers: new Headers(),
   })
