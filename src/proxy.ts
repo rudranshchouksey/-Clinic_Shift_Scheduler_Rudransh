@@ -1,35 +1,64 @@
-import { NextResponse, type NextRequest } from 'next/server'
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 
 export async function proxy(request: NextRequest) {
-  const pathName = request.nextUrl.pathname
+  const { pathname } = request.nextUrl
 
-  const response = await fetch(`${request.nextUrl.origin}/api/auth/get-session`, {
-    headers: {
-      cookie: request.headers.get('cookie') || '',
-    },
-  })
-
-  const session = response.ok ? await response.json() : null
-
-  const isAuthRoute = pathName.startsWith('/login')
-  const isProtectedRoute = pathName.startsWith('/dashboard')
-
-  if (isAuthRoute && session) {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
+  // Skip next internal routes and api
+  if (pathname.startsWith('/_next') || pathname.startsWith('/api') || pathname === '/favicon.ico') {
+    return NextResponse.next()
   }
 
-  if (isProtectedRoute && !session) {
-    return NextResponse.redirect(new URL('/login', request.url))
+  const isAuthRoute = pathname.startsWith('/login')
+  const isManagerRoute = pathname.startsWith('/manager')
+  const isStaffRoute = pathname.startsWith('/staff')
+
+  // Only check session if we are hitting protected routes or auth routes
+  if (!isAuthRoute && !isManagerRoute && !isStaffRoute) {
+    return NextResponse.next()
   }
 
-  // Very basic Role-based check (in production, usually better done via Server Actions / Layouts for deep logic)
-  if (pathName.startsWith('/dashboard/import') && session?.user?.role !== 'MANAGER') {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
+  let session = null
+  try {
+    const res = await fetch(`${request.nextUrl.origin}/api/auth/get-session`, {
+      headers: {
+        cookie: request.headers.get('cookie') || '',
+      },
+    })
+    if (res.ok) {
+      session = await res.json()
+    }
+  } catch (e) {
+    console.error('Proxy session fetch error', e)
+  }
+
+  if (!session || !session.user) {
+    if (isManagerRoute || isStaffRoute) {
+      return NextResponse.redirect(new URL('/login', request.url))
+    }
+    return NextResponse.next()
+  }
+
+  if (isAuthRoute) {
+    return NextResponse.redirect(
+      new URL(
+        session.user.role === 'MANAGER' ? '/manager/dashboard' : '/staff/dashboard',
+        request.url,
+      ),
+    )
+  }
+
+  if (isManagerRoute && session.user.role !== 'MANAGER') {
+    return NextResponse.redirect(new URL('/staff/dashboard', request.url))
+  }
+
+  if (isStaffRoute && session.user.role !== 'STAFF') {
+    return NextResponse.redirect(new URL('/manager/dashboard', request.url))
   }
 
   return NextResponse.next()
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 }
