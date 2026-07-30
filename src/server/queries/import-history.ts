@@ -1,7 +1,7 @@
-import { db } from '@/lib/db'
+import { prisma } from '@/lib/db'
 
 export async function getImportHistories() {
-  return db.importHistory.findMany({
+  return prisma.importHistory.findMany({
     orderBy: { createdAt: 'desc' },
     include: {
       reports: true,
@@ -16,7 +16,7 @@ export async function getImportHistories() {
 }
 
 export async function getImportReportDetails(id: string) {
-  const history = await db.importHistory.findUnique({
+  const history = await prisma.importHistory.findUnique({
     where: { id },
     include: {
       reports: true,
