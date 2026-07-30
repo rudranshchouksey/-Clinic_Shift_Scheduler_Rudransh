@@ -1,78 +1,90 @@
-import { PrismaClient, Prisma } from '@prisma/client'
-import * as bcrypt from 'bcryptjs'
+import { PrismaClient, Prisma, Profession } from '@prisma/client'
 import * as fs from 'fs'
 import * as path from 'path'
 import { importCsv } from '../src/services/importer'
 
 const prisma = new PrismaClient()
 
-async function main() {
-  console.log('Seeding initial users...')
-  const managerPassword = await bcrypt.hash('manager123', 10)
-  const doctorPassword = await bcrypt.hash('doctor123', 10)
-  const nursePassword = await bcrypt.hash('nurse123', 10)
-  const receptionistPassword = await bcrypt.hash('receptionist123', 10)
+import { auth } from '../src/server/auth'
 
-  // 1 Manager
-  const manager = await prisma.user.upsert({
-    where: { email: 'manager@clinic.com' },
-    update: {},
-    create: {
-      email: 'manager@clinic.com',
-      name: 'Admin Manager',
-      password: managerPassword,
-      role: 'MANAGER',
+async function createOrUpdateUser(
+  email: string,
+  name: string,
+  role: 'MANAGER' | 'STAFF',
+  profession: Profession | null,
+  passwordPlain: string,
+) {
+  const existing = await prisma.user.findUnique({ where: { email } })
+
+  if (existing) {
+    // Clean up existing so we can create it freshly with correct password hash using better-auth
+    await prisma.user.delete({ where: { id: existing.id } })
+  }
+
+  // Create via better-auth to ensure correct hash is generated in Account table
+  await auth.api.signUpEmail({
+    body: {
+      email,
+      password: passwordPlain,
+      name,
     },
+    headers: new Headers(),
   })
 
-  // We are asked to seed staff, but since the staff.csv contains all our actual staff,
-  // we could optionally just use the ones from the CSV and maybe give them default passwords.
-  // Wait, PROJECT_BRIEF says "Seed at least one manager login and several staff logins, with credentials listed in the README."
-  // So the existing dummy staff are fine. The CSV will add more staff.
+  // Update role and profession
+  return prisma.user.update({
+    where: { email },
+    data: { role, profession },
+  })
+}
+
+async function main() {
+  console.log('Seeding initial users...')
+  const managerPassword = 'manager123'
+  const doctorPassword = 'doctor123'
+  const nursePassword = 'nurse123'
+  const receptionistPassword = 'receptionist123'
+
+  // 1 Manager
+  const manager = await createOrUpdateUser(
+    'manager@clinic.com',
+    'Admin Manager',
+    'MANAGER',
+    null,
+    managerPassword,
+  )
 
   // Multiple Doctors
   for (let i = 1; i <= 2; i++) {
-    await prisma.user.upsert({
-      where: { email: `doctor${i}@clinic.com` },
-      update: {},
-      create: {
-        email: `doctor${i}@clinic.com`,
-        name: `Dr. Smith ${i}`,
-        password: doctorPassword,
-        role: 'STAFF',
-        profession: 'DOCTOR',
-      },
-    })
+    await createOrUpdateUser(
+      `doctor${i}@clinic.com`,
+      `Dr. Smith ${i}`,
+      'STAFF',
+      'DOCTOR',
+      doctorPassword,
+    )
   }
 
   // Multiple Nurses
   for (let i = 1; i <= 2; i++) {
-    await prisma.user.upsert({
-      where: { email: `nurse${i}@clinic.com` },
-      update: {},
-      create: {
-        email: `nurse${i}@clinic.com`,
-        name: `Nurse Joy ${i}`,
-        password: nursePassword,
-        role: 'STAFF',
-        profession: 'NURSE',
-      },
-    })
+    await createOrUpdateUser(
+      `nurse${i}@clinic.com`,
+      `Nurse Joy ${i}`,
+      'STAFF',
+      'NURSE',
+      nursePassword,
+    )
   }
 
   // Multiple Receptionists
   for (let i = 1; i <= 2; i++) {
-    await prisma.user.upsert({
-      where: { email: `receptionist${i}@clinic.com` },
-      update: {},
-      create: {
-        email: `receptionist${i}@clinic.com`,
-        name: `Rec. Anna ${i}`,
-        password: receptionistPassword,
-        role: 'STAFF',
-        profession: 'RECEPTIONIST',
-      },
-    })
+    await createOrUpdateUser(
+      `receptionist${i}@clinic.com`,
+      `Rec. Anna ${i}`,
+      'STAFF',
+      'RECEPTIONIST',
+      receptionistPassword,
+    )
   }
 
   console.log('Starting CSV imports...')
@@ -82,21 +94,19 @@ async function main() {
   const staffImportResult = await importCsv(staffCsvContent, 'STAFF')
 
   // Insert Staff into DB
-  // Give them a default password so they can log in if needed
-  const defaultStaffPassword = await bcrypt.hash('staff123', 10)
-  for (const staff of staffImportResult.accepted as Prisma.UserCreateInput[]) {
-    // Note: UserCreateInput doesn't have the password typed strongly if it's optional, but we can add it
-    await prisma.user.upsert({
-      where: { email: staff.email },
-      update: {
-        name: staff.name,
-        profession: staff.profession,
-      },
-      create: {
-        ...staff,
-        password: defaultStaffPassword,
-      },
-    })
+  const defaultStaffPassword = 'staff123'
+  for (const staff of staffImportResult.accepted as {
+    email: string
+    name: string
+    profession: Profession
+  }[]) {
+    await createOrUpdateUser(
+      staff.email,
+      staff.name,
+      'STAFF',
+      staff.profession,
+      defaultStaffPassword,
+    )
   }
 
   // Record Staff Import
@@ -127,21 +137,15 @@ async function main() {
 
   // Insert Shifts into DB
   for (const shift of shiftsImportResult.accepted as Prisma.ShiftCreateInput[]) {
-    // Using an upsert based on shift ID
-    // Prisma upsert needs a unique identifier. `id` is a unique identifier, but it might not be in the where clause if it's just the default CUID.
-    // Wait, the schema has `id String @id`. So we can upsert on `id`.
     await prisma.shift.upsert({
       where: { id: shift.id },
       update: {
         date: shift.date,
         startTime: shift.startTime,
         endTime: shift.endTime,
-        // For requirements, we usually want to delete old and insert new,
-        // but since this is a seed, we can assume it's just inserting or updating basic fields.
-        // Doing full nested updates for requirements is tricky, so if it exists we just keep it, or delete-insert.
         requirements: {
           deleteMany: {},
-          create: shift.requirements?.create,
+          create: shift.requirements?.create as Prisma.ShiftRequirementCreateWithoutShiftInput[],
         },
       },
       create: {
@@ -149,7 +153,8 @@ async function main() {
         date: shift.date,
         startTime: shift.startTime,
         endTime: shift.endTime,
-        requirements: shift.requirements,
+        requirements:
+          shift.requirements as Prisma.ShiftRequirementCreateNestedManyWithoutShiftInput,
       },
     })
   }

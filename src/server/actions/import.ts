@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db'
 import { requireManager } from '@/lib/auth-utils'
 import { revalidatePath } from 'next/cache'
 import { importCsv, ImportType } from '@/services/importer'
+import { Prisma } from '@prisma/client'
 import * as bcrypt from 'bcryptjs'
 
 export type ImportResultState = {
@@ -93,23 +94,22 @@ export async function uploadCsvAction(
         }
       } else if (type === 'SHIFTS') {
         // Insert Shifts
-        for (const shift of result.accepted as unknown as {
-          date: Date
-          startTime: Date
-          endTime: Date
-          requirements: Record<string, number>
-        }[]) {
-          await tx.shift.create({
-            data: {
+        for (const shift of result.accepted as Prisma.ShiftCreateInput[]) {
+          await tx.shift.upsert({
+            where: { id: shift.id },
+            update: {
               date: shift.date,
               startTime: shift.startTime,
               endTime: shift.endTime,
-              requirements: {
-                create: Object.entries(shift.requirements).map(([profession, count]) => ({
-                  profession: profession as never,
-                  count: count as number,
-                })),
-              },
+              // We don't update requirements on upsert to avoid complex diffs,
+              // or we can delete/recreate them if needed, but for now just update times.
+            },
+            create: {
+              id: shift.id,
+              date: shift.date,
+              startTime: shift.startTime,
+              endTime: shift.endTime,
+              requirements: shift.requirements,
             },
           })
         }

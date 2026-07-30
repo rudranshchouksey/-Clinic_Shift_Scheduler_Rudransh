@@ -22,6 +22,9 @@ This document outlines the core architectural and business decisions made during
 - **Overlap Prevention**:
   - _Decision_: Staff cannot claim multiple shifts that overlap in time.
   - _Reasoning_: Prevents accidental double-booking. Enforced strictly at the database logic level inside the `claimShift` Server Action.
+- **Handling Existing Claims on Shift Edits**:
+  - _Decision_: When a manager edits a shift's time or reduces its required capacity, the system re-validates all existing claims sequentially based on claim time. If a user's claim now overlaps with another shift they have, or exceeds the newly reduced quota, their claim on the edited shift is immediately deleted.
+  - _Reasoning_: This ensures the database always reflects a legal state without blocking the manager from updating critical schedule details. The oldest claims (first-come) are preserved over newer claims when reducing capacity.
 
 ## 3. CSV Ingestion Decisions
 
@@ -47,7 +50,8 @@ This document outlines the core architectural and business decisions made during
 - **Database Mocking for Tests**:
   - Using `vitest-mock-extended` allows integration tests to run instantly without tearing down a live database. However, this means we miss out on raw PostgreSQL constraint errors (like foreign key violations) during testing. We accept this tradeoff for faster developer velocity, relying on staging environments for final constraint checks.
 - **Authentication**:
-  - For the scope of this assignment, authentication is mocked/simplified via cookie-based utilities. In a production application, this should be replaced with a robust provider like NextAuth.js (Auth.js) or Clerk.
+  - _Decision_: Adopted `better-auth` as our primary authentication system, backed by the Prisma schema (`User`, `Account`, `Session`).
+  - _Reasoning_: Provides a secure, scalable, and fully typed authentication flow out of the box, fulfilling the requirement for distinct login credentials and protecting manager routes robustly.
 
 ## 6. Future Improvements
 

@@ -68,30 +68,91 @@ export async function updateShift(id: string, data: ShiftFormValues) {
   if (parsed.receptionistCount > 0)
     requirements.push({ profession: Profession.RECEPTIONIST, count: parsed.receptionistCount })
 
-  await prisma.$transaction(async (tx) => {
-    await tx.shift.update({
-      where: { id },
-      data: {
-        date: dateObj,
-        startTime,
-        endTime,
-      },
-    })
-
-    await tx.shiftRequirement.deleteMany({
-      where: { shiftId: id },
-    })
-
-    if (requirements.length > 0) {
-      await tx.shiftRequirement.createMany({
-        data: requirements.map((req) => ({
-          shiftId: id,
-          profession: req.profession,
-          count: req.count,
-        })),
+  await prisma.$transaction(
+    async (tx) => {
+      await tx.shift.update({
+        where: { id },
+        data: {
+          date: dateObj,
+          startTime,
+          endTime,
+        },
       })
-    }
-  })
+
+      await tx.shiftRequirement.deleteMany({
+        where: { shiftId: id },
+      })
+
+      if (requirements.length > 0) {
+        await tx.shiftRequirement.createMany({
+          data: requirements.map((req) => ({
+            shiftId: id,
+            profession: req.profession,
+            count: req.count,
+          })),
+        })
+      }
+
+      // Re-validate existing claims
+      const existingClaims = await tx.shiftClaim.findMany({
+        where: { shiftId: id },
+        include: { user: true },
+        orderBy: { createdAt: 'asc' }, // Keep oldest claims first if quota shrinks
+      })
+
+      const countsByProfession: Record<string, number> = {}
+      const claimsToDelete: string[] = []
+
+      for (const claim of existingClaims) {
+        const prof = claim.user.profession
+        if (!prof) {
+          claimsToDelete.push(claim.id)
+          continue
+        }
+
+        // 1. Check Quota
+        const reqCount = requirements.find((r) => r.profession === prof)?.count || 0
+        countsByProfession[prof] = (countsByProfession[prof] || 0) + 1
+
+        if (countsByProfession[prof] > reqCount) {
+          claimsToDelete.push(claim.id)
+          continue
+        }
+
+        // 2. Check Overlap
+        const otherClaims = await tx.shiftClaim.findMany({
+          where: {
+            userId: claim.userId,
+            id: { not: claim.id },
+            shift: {
+              date: dateObj,
+              deletedAt: null,
+            },
+          },
+          include: { shift: true },
+        })
+
+        const overlaps = otherClaims.some((other) => {
+          const otherStart = other.shift.startTime.getTime()
+          const otherEnd = other.shift.endTime.getTime()
+          const thisStart = startTime.getTime()
+          const thisEnd = endTime.getTime()
+          return thisStart < otherEnd && thisEnd > otherStart
+        })
+
+        if (overlaps) {
+          claimsToDelete.push(claim.id)
+        }
+      }
+
+      if (claimsToDelete.length > 0) {
+        await tx.shiftClaim.deleteMany({
+          where: { id: { in: claimsToDelete } },
+        })
+      }
+    },
+    { isolationLevel: 'Serializable' },
+  )
 
   revalidatePath('/dashboard/shifts')
   return { success: true }

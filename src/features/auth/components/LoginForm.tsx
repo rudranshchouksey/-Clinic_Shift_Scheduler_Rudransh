@@ -50,7 +50,12 @@ export function LoginForm() {
         return
       }
 
-      router.push('/dashboard')
+      const { data: sessionData } = await authClient.getSession()
+      if (sessionData?.user?.role === 'MANAGER') {
+        router.push('/manager/dashboard')
+      } else {
+        router.push('/staff/dashboard')
+      }
       router.refresh()
     } catch {
       setError('An unexpected error occurred.')

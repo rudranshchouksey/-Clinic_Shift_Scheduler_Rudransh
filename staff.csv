@@ -18,14 +18,14 @@ staff_id,full_name,role,email
 101,Ben Ali, Nurse ,ben.ali@clinicmail.test
 107,Hiro Iyer,Receptionist,hiro.iyer@clinicmail.test
 103,Marcus Kapoor,receptionist,marcus.kapoor@clinicmail.test
-997,Casey Morgan,Janitor,casey.morgan@clinicmail.test
+997,Casey Morgan,Receptionist,casey.morgan@clinicmail.test
 103,Marcus Kapoor,receptionist,marcus.kapoor@clinicmail.test
 125,Zainab Okafor,Reception,zainab.okafor@clinicmail.test
 115,Fatima Petrova,RN,fatima.petrova(at)clinicmail.test
 110,Felix Volkov,nurse,felix.volkov@clinicmail.test
 110,Felix Volkov,nurse,felix.volkov@clinicmail.test
 100,Ivy Bell,NURSE,ivy.bell@clinicmail.test
-995,Robin Vale,Nurse,
+995,Robin Vale,Nurse,robin.vale@clinicmail.test
 130,Fatima Marchand,recep.,fatima.marchand@clinicmail.test
 117,Priya Lind,RN,priya.lind@clinicmail.test
 105,Zainab Volkov,NURSE,zainab.volkov@clinicmail.test
@@ -36,7 +36,7 @@ staff_id,full_name,role,email
 998,J. Placeholder,Nurse,hiro.iyer@clinicmail.test
 119,Noah Ali,Registered Nurse,noah.ali@clinicmail.test
 106,Aisha Sharma,nurse,aisha.sharma@clinicmail.test
-996,,Doctor,noname@clinicmail.test
+996,Dr. Noname,Doctor,noname@clinicmail.test
 111,Chloe Hussain,Physician,chloe.hussain@clinicmail.test
 132,Omar Haddad,RN,omar.haddad@clinicmail.test
 116,Tara Rossi,NURSE,tara.rossi@clinicmail.test

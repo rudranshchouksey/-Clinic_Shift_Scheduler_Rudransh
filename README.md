@@ -90,12 +90,12 @@ After running the seed script, you can log in with the following default account
 **Manager Dashboard:**
 
 - Email: `manager@clinic.com`
-- Password: `password123`
+- Password: `manager123`
 
 **Staff Dashboard (Example generated from staff.csv):**
 
-- Email: `john@example.com` (or any other email in the staff CSV)
-- Password: `password123`
+- Email: `marcus.whitfield@clinicmail.test` (or any other email in the staff CSV)
+- Password: `staff123`
 
 ## Testing
 

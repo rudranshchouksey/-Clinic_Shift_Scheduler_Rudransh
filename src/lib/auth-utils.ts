@@ -19,7 +19,7 @@ export const requireAuth = async () => {
 export const requireManager = async () => {
   const session = await requireAuth()
   if (session.user.role !== 'MANAGER') {
-    redirect('/dashboard') // or some 403 page
+    redirect('/staff/dashboard') // or some 403 page
   }
   return session
 }
