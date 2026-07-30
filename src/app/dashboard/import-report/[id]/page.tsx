@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation'
 import { ImportReportClient } from '../_components/import-report-client'
 import Link from 'next/link'
 import { ChevronLeft } from 'lucide-react'
-import { Button, buttonVariants } from '@/components/ui/button'
+import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
 export default async function ImportReportDetailPage(props: { params: Promise<{ id: string }> }) {
@@ -35,7 +35,7 @@ export default async function ImportReportDetailPage(props: { params: Promise<{ 
   const allIssues = [...rejectedIssues, ...mergedIssues]
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-in fade-in duration-500 delay-150">
       <div className="flex items-center gap-4">
         <Link
           href="/dashboard/import-report"

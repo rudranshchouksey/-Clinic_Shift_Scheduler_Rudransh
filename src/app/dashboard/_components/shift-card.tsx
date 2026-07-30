@@ -3,15 +3,34 @@
 import { format } from 'date-fns'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Clock, AlertTriangle, CheckCircle2 } from 'lucide-react'
+import { Clock, AlertTriangle } from 'lucide-react'
 import { useTransition } from 'react'
 import { claimShift, unclaimShift } from '@/server/actions/shifts'
 import { toast } from 'sonner'
+import { Prisma } from '@prisma/client'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
+import { Loader2 } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
-import { Shift } from '@prisma/client'
+type ShiftWithRequirements = Prisma.ShiftGetPayload<{
+  include: {
+    requirements: true
+  }
+}>
 
 interface ShiftCardProps {
-  shift: Shift
+  shift: ShiftWithRequirements
   isClaimed: boolean
   hasConflict: boolean
 }
@@ -42,52 +61,102 @@ export function ShiftCard({ shift, isClaimed, hasConflict }: ShiftCardProps) {
   }
 
   return (
-    <Card
-      className={`relative overflow-hidden ${isClaimed ? 'border-emerald-500/30 bg-emerald-500/5' : 'bg-background/60 backdrop-blur-md'}`}
-    >
-      {isClaimed && (
-        <div className="absolute top-0 right-0 p-2">
-          <CheckCircle2 className="w-5 h-5 text-emerald-500 opacity-50" />
-        </div>
-      )}
-      <CardHeader className="pb-3">
-        <div className="space-y-1">
-          <CardTitle className="text-lg">{format(shift.date, 'EEEE, MMM d')}</CardTitle>
-          <div className="flex items-center text-sm text-muted-foreground font-medium">
-            <Clock className="w-4 h-4 mr-1.5" />
-            {format(shift.startTime, 'HH:mm')} - {format(shift.endTime, 'HH:mm')}
+    <Card className="flex flex-col overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border-muted-foreground/10 dark:bg-card/50 backdrop-blur-sm">
+      <CardHeader className="bg-muted/40 dark:bg-muted/10 pb-4">
+        <div className="flex items-start justify-between">
+          <div>
+            <CardTitle className="text-lg tracking-tight">
+              {format(shift.date, 'EEEE, MMM do')}
+            </CardTitle>
+            <div className="flex items-center text-sm text-muted-foreground mt-1 gap-1.5">
+              <Clock className="w-4 h-4 text-primary" />
+              <span>
+                {format(shift.startTime, 'h:mm a')} - {format(shift.endTime, 'h:mm a')}
+              </span>
+            </div>
           </div>
         </div>
       </CardHeader>
-      <CardContent className="pb-4">
-        {hasConflict && !isClaimed && (
-          <div className="flex items-start gap-2 mt-2 p-2.5 bg-yellow-500/10 border border-yellow-500/20 rounded-md">
-            <AlertTriangle className="w-4 h-4 text-yellow-600 mt-0.5 shrink-0" />
-            <p className="text-xs text-yellow-700 dark:text-yellow-500 font-medium leading-relaxed">
-              This shift overlaps with another shift you have already claimed.
-            </p>
+      <CardContent className="flex-1 pt-4">
+        <div className="space-y-1">
+          <p className="text-sm font-medium">Roles Required</p>
+          <div className="flex flex-wrap gap-2">
+            {shift.requirements.map((req) => (
+              <span
+                key={req.id}
+                className="text-sm text-muted-foreground bg-muted px-2.5 py-0.5 rounded-md"
+              >
+                {req.profession}
+              </span>
+            ))}
           </div>
-        )}
+        </div>
       </CardContent>
       <CardFooter className="pt-0">
         {isClaimed ? (
-          <Button
-            variant="destructive"
-            className="w-full bg-red-500/10 text-red-600 hover:bg-red-500/20 border-0"
-            onClick={handleDrop}
-            disabled={isPending}
-          >
-            {isPending ? 'Dropping...' : 'Drop Shift'}
-          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger
+              render={
+                <Button variant="destructive" className="w-full relative overflow-hidden group">
+                  <span className={cn('transition-all', isPending && 'opacity-0')}>Drop Shift</span>
+                  {isPending && <Loader2 className="w-4 h-4 animate-spin absolute" />}
+                </Button>
+              }
+            />
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will unclaim the shift and make it available to other staff members. You
+                  might not be able to claim it back.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleDrop}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  Drop Shift
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         ) : (
-          <Button
-            variant="default"
-            className="w-full"
-            onClick={handleClaim}
-            disabled={isPending || hasConflict}
-          >
-            {isPending ? 'Claiming...' : 'Claim Shift'}
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <div className="w-full">
+                    <Button
+                      className="w-full relative group transition-all"
+                      disabled={hasConflict || isPending}
+                      onClick={handleClaim}
+                    >
+                      <span
+                        className={cn(
+                          'flex items-center gap-2 transition-all',
+                          isPending && 'opacity-0',
+                        )}
+                      >
+                        {hasConflict && <AlertTriangle className="w-4 h-4" />}
+                        Claim Shift
+                      </span>
+                      {isPending && <Loader2 className="w-4 h-4 animate-spin absolute" />}
+                    </Button>
+                  </div>
+                }
+              />
+              {hasConflict && (
+                <TooltipContent
+                  side="top"
+                  className="bg-destructive text-destructive-foreground border-destructive"
+                >
+                  <p>You have a scheduling conflict at this time.</p>
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
         )}
       </CardFooter>
     </Card>

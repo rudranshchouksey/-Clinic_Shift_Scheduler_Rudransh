@@ -19,7 +19,7 @@ export async function ManagerDashboard({ searchParams }: { searchParams: { week?
   const shifts = await getShiftsForWeek(currentWeekStart, currentWeekEnd)
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-in fade-in duration-500 delay-100">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Shift Coverage</h1>
