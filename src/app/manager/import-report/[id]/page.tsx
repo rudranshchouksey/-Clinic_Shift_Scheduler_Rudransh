@@ -19,12 +19,14 @@ import {
 export default async function ManagerImportReportDetailsPage({
   params,
 }: {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }) {
   await requireManager()
 
+  const resolvedParams = await params
+
   const report = await prisma.importReport.findUnique({
-    where: { id: params.id },
+    where: { id: resolvedParams.id },
     include: {
       importHistory: {
         include: { importedBy: true },
