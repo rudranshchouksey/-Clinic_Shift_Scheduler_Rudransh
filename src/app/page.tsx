@@ -2,7 +2,7 @@ import { getSession } from '@/lib/auth-utils'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import {
   CalendarDays,
@@ -29,20 +29,22 @@ export default async function Home() {
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col font-sans selection:bg-primary/20">
       {/* Navbar */}
-      <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60 transition-all">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="bg-primary/10 p-2 rounded-xl">
-              <CalendarDays className="h-6 w-6 text-primary" />
+          <div className="flex items-center gap-2.5">
+            <div className="bg-primary text-primary-foreground p-2 rounded-xl">
+              <CalendarDays className="h-5 w-5" />
             </div>
-            <span className="font-bold text-xl tracking-tight">ClinicSync</span>
+            <span className="font-bold text-lg tracking-tight">ClinicSync</span>
           </div>
-          <nav className="flex items-center gap-4">
+          <nav className="flex items-center gap-3">
             <Link href="/login">
-              <Button variant="ghost">Sign In</Button>
+              <Button variant="ghost" className="font-medium">
+                Sign In
+              </Button>
             </Link>
             <Link href="/login">
-              <Button>Get Started</Button>
+              <Button className="font-medium shadow-sm">Get Started</Button>
             </Link>
           </nav>
         </div>
@@ -50,33 +52,39 @@ export default async function Home() {
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="relative py-24 lg:py-32 overflow-hidden">
+        <section className="relative pt-24 pb-32 lg:pt-32 lg:pb-40 overflow-hidden">
           {/* Background decoration */}
-          <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/20 via-background to-background"></div>
+          <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/10 via-background to-background"></div>
           <div className="absolute top-0 right-0 -z-10 translate-x-1/3 -translate-y-1/4 transform">
-            <div className="h-96 w-96 rounded-full bg-primary/10 blur-3xl"></div>
+            <div className="h-[500px] w-[500px] rounded-full bg-primary/20 blur-[100px]"></div>
+          </div>
+          <div className="absolute bottom-0 left-0 -z-10 -translate-x-1/3 translate-y-1/4 transform">
+            <div className="h-[400px] w-[400px] rounded-full bg-blue-500/10 blur-[80px]"></div>
           </div>
 
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
             <Badge
               variant="outline"
-              className="mb-6 px-4 py-1.5 rounded-full border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 transition-colors cursor-default"
+              className="mb-8 px-4 py-1.5 rounded-full border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 transition-colors cursor-default text-sm font-medium"
             >
               ✨ The modern way to schedule
             </Badge>
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight mb-8 text-balance mx-auto max-w-4xl leading-tight">
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight mb-8 text-balance mx-auto max-w-4xl leading-[1.1]">
               Smarter scheduling for <br className="hidden md:block" />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary/60">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-primary/90 to-primary/60">
                 modern clinics
               </span>
             </h1>
-            <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto text-balance leading-relaxed">
+            <p className="text-lg md:text-xl text-muted-foreground mb-12 max-w-2xl mx-auto text-balance leading-relaxed">
               Empower your managers to effortlessly create shifts and allow staff to claim them in
               seconds. Say goodbye to spreadsheet chaos and hello to seamless coverage.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link href="/login">
-                <Button size="lg" className="w-full sm:w-auto h-12 px-8 text-base group">
+                <Button
+                  size="lg"
+                  className="w-full sm:w-auto h-12 px-8 text-base group shadow-md hover:shadow-lg transition-all"
+                >
                   Start Scheduling Now
                   <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                 </Button>
@@ -85,7 +93,7 @@ export default async function Home() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="w-full sm:w-auto h-12 px-8 text-base"
+                  className="w-full sm:w-auto h-12 px-8 text-base bg-background/50 backdrop-blur-sm hover:bg-accent/50"
                 >
                   View Demo
                 </Button>
@@ -95,52 +103,64 @@ export default async function Home() {
         </section>
 
         {/* Dashboard Preview Section */}
-        <section id="demo" className="py-12 bg-muted/30 border-y">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="relative mx-auto max-w-5xl rounded-xl border bg-background shadow-2xl overflow-hidden transition-all hover:shadow-primary/5 duration-500">
+        <section id="demo" className="py-20 bg-muted/30 border-y relative overflow-hidden">
+          <div className="absolute inset-0 bg-grid-black/[0.02] dark:bg-grid-white/[0.02] bg-[length:32px_32px]"></div>
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div className="relative mx-auto max-w-5xl rounded-xl border bg-background/80 backdrop-blur-xl shadow-2xl overflow-hidden transition-all hover:shadow-primary/10 duration-700 ring-1 ring-white/10 dark:ring-white/5">
               {/* Fake Browser Chrome */}
-              <div className="flex items-center px-4 py-3 border-b bg-muted/50">
+              <div className="flex items-center px-4 py-3 border-b bg-muted/80 backdrop-blur-md">
                 <div className="flex space-x-2">
-                  <div className="h-3 w-3 rounded-full bg-red-400/80"></div>
-                  <div className="h-3 w-3 rounded-full bg-amber-400/80"></div>
-                  <div className="h-3 w-3 rounded-full bg-green-400/80"></div>
+                  <div className="h-3 w-3 rounded-full bg-red-400/80 shadow-sm"></div>
+                  <div className="h-3 w-3 rounded-full bg-amber-400/80 shadow-sm"></div>
+                  <div className="h-3 w-3 rounded-full bg-emerald-400/80 shadow-sm"></div>
                 </div>
-                <div className="mx-auto flex h-6 w-full max-w-md items-center justify-center rounded-md bg-background text-xs text-muted-foreground shadow-sm">
+                <div className="mx-auto flex h-6 w-full max-w-md items-center justify-center rounded-md bg-background/50 text-[11px] font-medium text-muted-foreground shadow-sm border border-border/50">
                   clinicsync.app/manager/dashboard
                 </div>
               </div>
 
               {/* Mock Dashboard Content */}
-              <div className="p-6 md:p-8 grid gap-6 md:grid-cols-3">
+              <div className="p-6 md:p-8 grid gap-6 md:grid-cols-3 bg-background/95">
                 <div className="md:col-span-2 space-y-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="text-lg font-semibold">Upcoming Shifts</h3>
+                      <h3 className="text-lg font-semibold tracking-tight">Upcoming Shifts</h3>
                       <p className="text-sm text-muted-foreground">
                         Manage this week&apos;s coverage
                       </p>
                     </div>
-                    <Button size="sm">Create Shift</Button>
+                    <Button size="sm" className="shadow-sm">
+                      Create Shift
+                    </Button>
                   </div>
 
                   <div className="space-y-3">
                     {[1, 2, 3].map((i) => (
                       <div
                         key={i}
-                        className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                        className="flex items-center justify-between p-4 rounded-xl border bg-card/50 hover:bg-accent/50 transition-colors shadow-sm"
                       >
                         <div className="flex items-center gap-4">
                           <div
-                            className={`p-2 rounded-md ${i === 1 ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'}`}
+                            className={`p-2.5 rounded-lg ${i === 1 ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400'}`}
                           >
                             <Clock className="h-5 w-5" />
                           </div>
                           <div>
-                            <p className="font-medium">Morning Shift - Triage</p>
-                            <p className="text-sm text-muted-foreground">08:00 AM - 04:00 PM</p>
+                            <p className="font-semibold text-sm">Morning Shift - Triage</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              08:00 AM – 04:00 PM
+                            </p>
                           </div>
                         </div>
-                        <Badge variant={i === 1 ? 'secondary' : 'default'}>
+                        <Badge
+                          variant={i === 1 ? 'secondary' : 'outline'}
+                          className={
+                            i !== 1
+                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20'
+                              : ''
+                          }
+                        >
                           {i === 1 ? 'Open' : 'Covered'}
                         </Badge>
                       </div>
@@ -149,29 +169,43 @@ export default async function Home() {
                 </div>
 
                 <div className="space-y-6">
-                  <Card className="border-none shadow-md bg-gradient-to-br from-primary/5 to-primary/10">
+                  <Card className="border shadow-sm overflow-hidden relative group">
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                     <CardHeader className="pb-2">
-                      <CardTitle className="text-sm font-medium">Weekly Coverage</CardTitle>
+                      <CardTitle className="text-sm font-medium text-muted-foreground">
+                        Weekly Coverage
+                      </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-3xl font-bold">85%</div>
-                      <p className="text-xs text-muted-foreground mt-1">+12% from last week</p>
-                      <div className="mt-4 h-2 w-full bg-background rounded-full overflow-hidden">
-                        <div className="h-full bg-primary w-[85%] rounded-full"></div>
+                      <div className="text-4xl font-bold tracking-tight text-primary">85%</div>
+                      <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400 mt-1">
+                        +12% from last week
+                      </p>
+                      <div className="mt-5 h-2 w-full bg-muted rounded-full overflow-hidden">
+                        <div className="h-full bg-primary w-[85%] rounded-full shadow-[0_0_10px_rgba(var(--primary),0.5)]"></div>
                       </div>
                     </CardContent>
                   </Card>
 
-                  <Card className="shadow-sm">
+                  <Card className="shadow-sm border">
                     <CardHeader className="pb-2">
-                      <CardTitle className="text-sm font-medium">Quick Actions</CardTitle>
+                      <CardTitle className="text-sm font-medium text-muted-foreground">
+                        Quick Actions
+                      </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2">
-                      <Button variant="outline" className="w-full justify-start text-xs h-9">
-                        <FileSpreadsheet className="mr-2 h-3.5 w-3.5" /> Import Roster CSV
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start text-xs h-9 font-medium"
+                      >
+                        <FileSpreadsheet className="mr-2 h-3.5 w-3.5 text-blue-500" /> Import Roster
+                        CSV
                       </Button>
-                      <Button variant="outline" className="w-full justify-start text-xs h-9">
-                        <Users className="mr-2 h-3.5 w-3.5" /> Manage Staff
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start text-xs h-9 font-medium"
+                      >
+                        <Users className="mr-2 h-3.5 w-3.5 text-violet-500" /> Manage Staff
                       </Button>
                     </CardContent>
                   </Card>
@@ -182,10 +216,13 @@ export default async function Home() {
         </section>
 
         {/* Features Section */}
-        <section className="py-24">
+        <section className="py-24 lg:py-32">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center max-w-3xl mx-auto mb-16">
-              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl mb-4">
+              <Badge variant="outline" className="mb-4">
+                Features
+              </Badge>
+              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl mb-4 text-balance">
                 Everything you need to run your clinic
               </h2>
               <p className="text-lg text-muted-foreground text-balance">
@@ -194,7 +231,7 @@ export default async function Home() {
               </p>
             </div>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
               <FeatureCard
                 icon={<CalendarDays />}
                 title="Shift Management"
@@ -230,27 +267,26 @@ export default async function Home() {
         </section>
 
         {/* Tech Stack Section */}
-        <section className="py-16 bg-muted/30 border-t">
+        <section className="py-20 bg-muted/30 border-t">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-8">
+            <p className="text-sm font-semibold text-muted-foreground uppercase tracking-widest mb-8">
               Built with modern technology
             </p>
-            <div className="flex flex-wrap justify-center gap-3 md:gap-6">
+            <div className="flex flex-wrap justify-center gap-3 md:gap-4 max-w-3xl mx-auto">
               {[
                 'Next.js 15',
                 'TypeScript',
                 'Prisma ORM',
                 'PostgreSQL',
                 'Better Auth',
-                'Tailwind CSS',
+                'Tailwind CSS v4',
               ].map((tech) => (
-                <Badge
+                <div
                   key={tech}
-                  variant="secondary"
-                  className="px-4 py-2 text-sm font-medium hover:bg-secondary/80 transition-colors"
+                  className="px-5 py-2.5 rounded-full border bg-background/50 backdrop-blur-sm text-sm font-medium shadow-sm hover:shadow-md transition-all hover:-translate-y-0.5 hover:border-primary/30"
                 >
                   {tech}
-                </Badge>
+                </div>
               ))}
             </div>
           </div>
@@ -259,24 +295,26 @@ export default async function Home() {
 
       {/* Footer */}
       <footer className="border-t bg-background">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <CalendarDays className="h-5 w-5 text-primary" />
-            <span className="font-semibold text-lg">ClinicSync</span>
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-10 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex items-center gap-2.5">
+            <div className="bg-primary text-primary-foreground p-1.5 rounded-lg">
+              <CalendarDays className="h-4 w-4" />
+            </div>
+            <span className="font-semibold text-lg tracking-tight">ClinicSync</span>
           </div>
           <p className="text-sm text-muted-foreground text-center md:text-left">
-            &copy; {new Date().getFullYear()} Clinic Shift Scheduler. All rights reserved.
+            &copy; {new Date().getFullYear()} ClinicSync. All rights reserved.
           </p>
-          <div className="flex gap-4">
+          <div className="flex gap-6">
             <Link
               href="#"
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
               Privacy
             </Link>
             <Link
               href="#"
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
               Terms
             </Link>
@@ -297,16 +335,12 @@ function FeatureCard({
   description: string
 }) {
   return (
-    <Card className="group hover:border-primary/50 transition-all duration-300 hover:shadow-md bg-card/50 hover:bg-card">
-      <CardHeader>
-        <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-4 group-hover:scale-110 group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300">
-          {icon}
-        </div>
-        <CardTitle className="text-xl">{title}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <CardDescription className="text-base leading-relaxed">{description}</CardDescription>
-      </CardContent>
-    </Card>
+    <div className="group rounded-2xl border bg-card p-6 shadow-sm hover:shadow-md transition-all duration-300 hover:border-primary/30">
+      <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary mb-5 group-hover:scale-110 group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300 shadow-sm">
+        {icon}
+      </div>
+      <h3 className="text-xl font-bold tracking-tight mb-2">{title}</h3>
+      <p className="text-muted-foreground text-sm leading-relaxed">{description}</p>
+    </div>
   )
 }

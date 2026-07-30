@@ -92,7 +92,7 @@ export function ManagerShiftsClient({
       startTime: format(new Date(shift.startTime), 'HH:mm'),
       endTime: format(new Date(shift.endTime), 'HH:mm'),
       requirements: shift.requirements.map((r: { profession: string; count: number }) => ({
-        profession: r.profession,
+        profession: r.profession as 'DOCTOR' | 'NURSE' | 'RECEPTIONIST',
         count: r.count,
       })),
     })

@@ -10,11 +10,10 @@ import { authClient } from '@/lib/auth-client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Loader2 } from 'lucide-react'
+import { Loader2, AlertCircle } from 'lucide-react'
 
 const formSchema = z.object({
-  email: z.string().email({ message: 'Invalid email address' }),
+  email: z.string().email({ message: 'Please enter a valid email address' }),
   password: z.string().min(1, { message: 'Password is required' }),
 })
 
@@ -60,50 +59,59 @@ export function LoginForm() {
   }
 
   return (
-    <Card className="w-full max-w-md mx-auto shadow-lg">
-      <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-bold tracking-tight">Sign in</CardTitle>
-        <CardDescription>
-          Enter your email and password to access the Clinic Scheduler
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="name@clinic.com"
-              {...register('email')}
-              disabled={isLoading}
-            />
-            {errors.email && (
-              <p className="text-sm font-medium text-destructive">{errors.email.message}</p>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="••••••••"
-              {...register('password')}
-              disabled={isLoading}
-            />
-            {errors.password && (
-              <p className="text-sm font-medium text-destructive">{errors.password.message}</p>
-            )}
-          </div>
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      {error && (
+        <div className="flex items-center gap-2 rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive">
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          <span>{error}</span>
+        </div>
+      )}
 
-          {error && <div className="text-sm font-medium text-destructive">{error}</div>}
+      <div className="space-y-2">
+        <Label htmlFor="email" className="text-sm font-medium">
+          Email address
+        </Label>
+        <Input
+          id="email"
+          type="email"
+          placeholder="you@clinic.com"
+          className="h-10"
+          {...register('email')}
+          disabled={isLoading}
+          autoComplete="email"
+          autoFocus
+        />
+        {errors.email && (
+          <p className="text-xs font-medium text-destructive">{errors.email.message}</p>
+        )}
+      </div>
 
-          <Button type="submit" className="w-full mt-4" disabled={isLoading}>
-            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Sign In
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+      <div className="space-y-2">
+        <Label htmlFor="password" className="text-sm font-medium">
+          Password
+        </Label>
+        <Input
+          id="password"
+          type="password"
+          placeholder="••••••••"
+          className="h-10"
+          {...register('password')}
+          disabled={isLoading}
+          autoComplete="current-password"
+        />
+        {errors.password && (
+          <p className="text-xs font-medium text-destructive">{errors.password.message}</p>
+        )}
+      </div>
+
+      <Button type="submit" className="w-full h-10 mt-2" disabled={isLoading}>
+        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        Sign in
+      </Button>
+
+      <p className="text-center text-xs text-muted-foreground mt-4">
+        Staff accounts are created by managers via CSV import.
+      </p>
+    </form>
   )
 }

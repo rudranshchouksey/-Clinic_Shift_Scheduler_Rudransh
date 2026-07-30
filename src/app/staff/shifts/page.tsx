@@ -2,13 +2,23 @@ import { prisma } from '@/lib/db'
 import { Profession } from '@prisma/client'
 import { requireAuth } from '@/lib/auth-utils'
 import { StaffShiftsClient } from './_components/staff-shifts-client'
+import { CalendarDays } from 'lucide-react'
 
 export default async function StaffShiftsPage() {
   const session = await requireAuth()
   if (!session.user.profession) {
     return (
-      <div className="p-8 text-center text-muted-foreground">
-        You must have a profession assigned to claim shifts. Please contact a manager.
+      <div className="flex flex-1 items-center justify-center p-8">
+        <div className="flex flex-col items-center max-w-md text-center p-8 rounded-2xl bg-muted/30 border">
+          <div className="p-4 rounded-full bg-muted mb-4">
+            <CalendarDays className="h-8 w-8 text-muted-foreground" />
+          </div>
+          <h2 className="text-xl font-bold tracking-tight mb-2">No Profession Assigned</h2>
+          <p className="text-muted-foreground">
+            You must have a profession assigned to claim shifts. Please contact a clinic manager to
+            update your profile.
+          </p>
+        </div>
       </div>
     )
   }
@@ -39,9 +49,12 @@ export default async function StaffShiftsPage() {
   })
 
   return (
-    <div className="flex flex-1 flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold md:text-2xl">Browse Available Shifts</h1>
+    <div className="flex flex-1 flex-col gap-8">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Available Shifts</h1>
+        <p className="text-muted-foreground mt-1">
+          Browse and claim upcoming shifts that require a {session.user.profession.toLowerCase()}.
+        </p>
       </div>
       <StaffShiftsClient
         initialShifts={shifts}

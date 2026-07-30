@@ -34,9 +34,12 @@ export default async function ManagerCoveragePage({
   })
 
   return (
-    <div className="flex flex-1 flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold md:text-2xl">Weekly Coverage</h1>
+    <div className="flex flex-1 flex-col gap-8">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Coverage</h1>
+        <p className="text-muted-foreground mt-1">
+          Weekly view of shift coverage across all roles.
+        </p>
       </div>
       <CoverageBoard shifts={shifts} baseDate={baseDate} startDate={startDate} endDate={endDate} />
     </div>

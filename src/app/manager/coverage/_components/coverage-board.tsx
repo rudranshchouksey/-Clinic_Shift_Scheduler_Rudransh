@@ -3,10 +3,23 @@
 import * as React from 'react'
 import Link from 'next/link'
 import { format, addWeeks, subWeeks, addDays, isSameDay } from 'date-fns'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react'
 
 import { buttonVariants } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+
+const professionShort: Record<string, string> = {
+  DOCTOR: 'Doc',
+  NURSE: 'Nurse',
+  RECEPTIONIST: 'Recep',
+}
+
+const professionDotColor: Record<string, string> = {
+  DOCTOR: 'bg-blue-500',
+  NURSE: 'bg-emerald-500',
+  RECEPTIONIST: 'bg-violet-500',
+}
 
 export function CoverageBoard({
   shifts,
@@ -20,7 +33,7 @@ export function CoverageBoard({
     startTime: Date | string
     endTime: Date | string
     requirements: { id: string; profession: string; count: number }[]
-    claims: { user: { profession: string } }[]
+    claims: { user: { profession: string | null } }[]
   }[]
   baseDate: Date
   startDate: Date
@@ -35,82 +48,107 @@ export function CoverageBoard({
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between bg-card p-2 rounded-lg border">
+    <div className="space-y-6">
+      {/* Week Navigator */}
+      <div className="flex items-center justify-between">
         <Link
           href={`?date=${prevWeekStr}`}
-          className={buttonVariants({ variant: 'outline', size: 'icon' })}
+          className={buttonVariants({ variant: 'outline', size: 'icon', className: 'h-9 w-9' })}
+          aria-label="Previous week"
         >
           <ChevronLeft className="h-4 w-4" />
         </Link>
-        <div className="font-medium text-lg">
-          {format(startDate, 'MMM d')} - {format(endDate, 'MMM d, yyyy')}
+        <div className="flex items-center gap-2">
+          <Calendar className="h-4 w-4 text-muted-foreground" />
+          <span className="font-semibold text-sm">
+            {format(startDate, 'MMM d')} – {format(endDate, 'MMM d, yyyy')}
+          </span>
         </div>
         <Link
           href={`?date=${nextWeekStr}`}
-          className={buttonVariants({ variant: 'outline', size: 'icon' })}
+          className={buttonVariants({ variant: 'outline', size: 'icon', className: 'h-9 w-9' })}
+          aria-label="Next week"
         >
           <ChevronRight className="h-4 w-4" />
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
+      {/* Calendar Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
         {days.map((day) => {
           const dayShifts = shifts.filter((s) => isSameDay(new Date(s.date), day))
           const isToday = isSameDay(day, new Date())
+          const isWeekend = day.getDay() === 0 || day.getDay() === 6
 
           return (
-            <Card key={day.toISOString()} className={isToday ? 'border-primary' : ''}>
-              <CardHeader className="p-3 text-center border-b bg-muted/50">
-                <CardTitle className="text-sm font-medium">{format(day, 'EEEE')}</CardTitle>
-                <div className="text-xs text-muted-foreground">{format(day, 'MMM d')}</div>
+            <Card
+              key={day.toISOString()}
+              className={`overflow-hidden transition-all duration-200 hover:shadow-md ${
+                isToday ? 'border-primary ring-1 ring-primary/20' : isWeekend ? 'bg-muted/30' : ''
+              }`}
+            >
+              <CardHeader className="p-3 pb-2">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    {format(day, 'EEE')}
+                  </CardTitle>
+                  <span
+                    className={`text-sm font-bold ${
+                      isToday
+                        ? 'bg-primary text-primary-foreground h-7 w-7 rounded-full flex items-center justify-center'
+                        : 'text-foreground'
+                    }`}
+                  >
+                    {format(day, 'd')}
+                  </span>
+                </div>
               </CardHeader>
-              <CardContent className="p-3 space-y-3 min-h-[150px]">
+              <CardContent className="p-3 pt-0 space-y-2 min-h-[120px]">
                 {dayShifts.length === 0 ? (
-                  <div className="text-center text-xs text-muted-foreground mt-4">No shifts</div>
+                  <div className="flex items-center justify-center h-full min-h-[80px]">
+                    <span className="text-xs text-muted-foreground/50">No shifts</span>
+                  </div>
                 ) : (
-                  dayShifts.map((shift) => {
-                    shift.requirements.forEach(() => {
-                      /* no-op */
-                    })
-
-                    return (
-                      <div
-                        key={shift.id}
-                        className="text-xs border rounded p-2 bg-background space-y-2"
-                      >
-                        <div className="font-semibold">
-                          {format(new Date(shift.startTime), 'HH:mm')} -{' '}
-                          {format(new Date(shift.endTime), 'HH:mm')}
-                        </div>
-                        <div className="flex flex-col gap-1">
-                          {shift.requirements.map(
-                            (r: { id: string; profession: string; count: number }) => {
-                              const profClaims = shift.claims.filter(
-                                (c: { user: { profession: string } }) =>
-                                  c.user.profession === r.profession,
-                              ).length
-                              const profFilled = profClaims >= r.count
-                              return (
-                                <div key={r.id} className="flex justify-between items-center">
-                                  <span>{r.profession.slice(0, 3)}</span>
-                                  <span
-                                    className={
-                                      profFilled
-                                        ? 'text-green-600 dark:text-green-400'
-                                        : 'text-destructive font-medium'
-                                    }
-                                  >
-                                    {profClaims}/{r.count}
+                  dayShifts.map((shift) => (
+                    <div
+                      key={shift.id}
+                      className="rounded-lg border bg-card p-2.5 space-y-2 hover:bg-accent/30 transition-colors"
+                    >
+                      <p className="text-xs font-semibold text-foreground">
+                        {format(new Date(shift.startTime), 'HH:mm')} –{' '}
+                        {format(new Date(shift.endTime), 'HH:mm')}
+                      </p>
+                      <div className="space-y-1">
+                        {shift.requirements.map(
+                          (r: { id: string; profession: string; count: number }) => {
+                            const profClaims = shift.claims.filter(
+                              (c: { user: { profession: string | null } }) =>
+                                c.user.profession === r.profession,
+                            ).length
+                            const profFilled = profClaims >= r.count
+                            return (
+                              <div key={r.id} className="flex items-center justify-between gap-1">
+                                <div className="flex items-center gap-1.5">
+                                  <div
+                                    className={`h-1.5 w-1.5 rounded-full ${professionDotColor[r.profession] || 'bg-gray-400'}`}
+                                  />
+                                  <span className="text-[11px] text-muted-foreground">
+                                    {professionShort[r.profession] || r.profession}
                                   </span>
                                 </div>
-                              )
-                            },
-                          )}
-                        </div>
+                                <Badge
+                                  variant={profFilled ? 'default' : 'destructive'}
+                                  className="text-[10px] h-4 px-1.5 font-mono"
+                                >
+                                  {profClaims}/{r.count}
+                                </Badge>
+                              </div>
+                            )
+                          },
+                        )}
                       </div>
-                    )
-                  })
+                    </div>
+                  ))
                 )}
               </CardContent>
             </Card>
