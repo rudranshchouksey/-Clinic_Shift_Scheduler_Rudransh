@@ -86,9 +86,11 @@ export function ImportReportClient({
     setPage(1)
   }
 
-  const handleFilterChange = (val: string) => {
-    setFilter(val as 'ALL' | 'REJECTED' | 'MERGED')
-    setPage(1)
+  const handleFilterChange = (val: string | null) => {
+    if (val) {
+      setFilter(val as 'ALL' | 'REJECTED' | 'MERGED')
+      setPage(1)
+    }
   }
 
   return (

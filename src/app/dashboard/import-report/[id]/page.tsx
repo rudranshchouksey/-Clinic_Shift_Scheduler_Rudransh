@@ -4,7 +4,8 @@ import { notFound } from 'next/navigation'
 import { ImportReportClient } from '../_components/import-report-client'
 import Link from 'next/link'
 import { ChevronLeft } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
 export default async function ImportReportDetailPage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params
@@ -36,11 +37,12 @@ export default async function ImportReportDetailPage(props: { params: Promise<{ 
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <Button variant="outline" size="icon" asChild>
-          <Link href="/dashboard/import-report">
-            <ChevronLeft className="h-4 w-4" />
-          </Link>
-        </Button>
+        <Link
+          href="/dashboard/import-report"
+          className={cn(buttonVariants({ variant: 'outline', size: 'icon' }))}
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </Link>
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Report: {history.fileName}</h1>
           <p className="text-muted-foreground mt-1">Imported by {history.importedBy.name}</p>

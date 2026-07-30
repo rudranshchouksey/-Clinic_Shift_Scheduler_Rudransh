@@ -22,7 +22,7 @@ export async function parseCsvString(csvString: string): Promise<Record<string, 
             return
           }
         }
-        resolve(results.data)
+        resolve(results.data as Record<string, string>[])
       },
       error: (error: Error) => {
         reject(error)
