@@ -10,7 +10,8 @@
     "prepare": "husky",
     "seed": "npx tsx prisma/seed.ts",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
