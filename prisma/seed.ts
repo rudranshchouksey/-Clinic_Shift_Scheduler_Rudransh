@@ -100,7 +100,7 @@ async function main() {
   }
 
   // Record Staff Import
-  const staffHistory = await prisma.importHistory.create({
+  await prisma.importHistory.create({
     data: {
       fileName: 'staff.csv',
       importedById: manager.id,
@@ -155,7 +155,7 @@ async function main() {
   }
 
   // Record Shifts Import
-  const shiftsHistory = await prisma.importHistory.create({
+  await prisma.importHistory.create({
     data: {
       fileName: 'shifts.csv',
       importedById: manager.id,
