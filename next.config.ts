@@ -1,7 +1,18 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
-  /* config options here */
-};
+  // Optimize commonly used icon/utility packages
+  serverExternalPackages: ['bcryptjs'],
 
-export default nextConfig;
+  images: {
+    // Add remote domains here if needed in the future
+    remotePatterns: [],
+  },
+
+  // Enable experimental optimizations for large packages
+  experimental: {
+    optimizePackageImports: ['lucide-react', 'date-fns'],
+  },
+}
+
+export default nextConfig

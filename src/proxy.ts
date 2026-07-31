@@ -4,16 +4,11 @@ import type { NextRequest } from 'next/server'
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Skip next internal routes and api
-  if (pathname.startsWith('/_next') || pathname.startsWith('/api') || pathname === '/favicon.ico') {
-    return NextResponse.next()
-  }
-
   const isAuthRoute = pathname.startsWith('/login')
   const isManagerRoute = pathname.startsWith('/manager')
   const isStaffRoute = pathname.startsWith('/staff')
 
-  // Only check session if we are hitting protected routes or auth routes
+  // Only check session for protected and auth routes
   if (!isAuthRoute && !isManagerRoute && !isStaffRoute) {
     return NextResponse.next()
   }
@@ -60,5 +55,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|api/).*)'],
 }
